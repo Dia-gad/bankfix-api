@@ -1,0 +1,35 @@
+@baseUrl = http://localhost:3000
+
+### Health
+GET {{baseUrl}}/health
+
+### List maintenance requests
+GET {{baseUrl}}/api/maintenance-requests?limit=20&offset=0
+
+### Get one request
+GET {{baseUrl}}/api/maintenance-requests/1
+
+### Create request (fictional data only)
+POST {{baseUrl}}/api/maintenance-requests
+Content-Type: application/json
+
+{
+  "facility_id": 1,
+  "asset_id": 1,
+  "title": "Demo water leak in service area",
+  "description": "Fictional issue created for local API testing.",
+  "priority": "high",
+  "reported_by": "Demo Operations User"
+}
+
+### Update request
+PATCH {{baseUrl}}/api/maintenance-requests/1
+Content-Type: application/json
+
+{
+  "status": "in_progress",
+  "priority": "medium"
+}
+
+### Delete request
+DELETE {{baseUrl}}/api/maintenance-requests/1
