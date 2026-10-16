@@ -51,5 +51,17 @@ All data must be fictional. Authentication is not implemented in Week 1.
 ## Repository and milestone
 Create a public GitHub repository after reviewing that no secrets are present. Tag the verified Week 1 milestone `week-1` only after smoke tests pass.
 
-## Known limitation
-This package is generated starter code and has not been run against your local PostgreSQL installation yet. Follow the steps in `docs/smoke-test.md` and fix any environment-specific issues before claiming the API is tested.
+## Week 1 verification
+
+The project has been set up and exercised locally using fictional demo data.
+
+- PostgreSQL schema migration completed successfully.
+- Fictional demo data was seeded successfully.
+- The health endpoint returned a successful response.
+- Maintenance-request CRUD was tested locally using Postman.
+- `.env` is excluded from Git, and `.env.example` provides environment placeholders.
+
+See `docs/api-spec.md` for the API contract and
+`docs/smoke-test.md` for the manual test checklist.
+
+Authentication and authorization are planned for Week 2.
