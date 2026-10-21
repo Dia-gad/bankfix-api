@@ -1,62 +1,49 @@
-# BankFix API Specification — Week 1
+# BankFix API Specification — Week 2
 
 Base URL: `http://localhost:3000`
 
-## Health
-`GET /health`
-- Purpose: process health check.
-- Success: `200 { "status": "ok", "service": "bankfix-api" }`
+## Authentication
 
-## List requests
-`GET /api/maintenance-requests?limit=20&offset=0`
-- Purpose: list requests with simple pagination.
-- Success: `200 { "data": [], "pagination": { "limit": 20, "offset": 0, "count": 0 } }`
-- `limit` is clamped to 1–100; `offset` is non-negative.
+### Register
+`POST /api/auth/register`
+- Body: `{ "name": "Demo Requester", "email": "requester@example.test", "password": "LocalDemoPassword123!" }`
+- Success: `201` with a public user object and JWT access token.
+- Invalid body: `400 VALIDATION_ERROR`.
+- Duplicate email: `409 EMAIL_ALREADY_REGISTERED`.
+- Passwords are hashed with bcrypt before storage. Public responses never include password hashes.
+- Self-registration creates `requester` users only. Promote a trusted local demo account to `admin` with a direct database update; never accept a role from the public request body.
 
-## Read one request
-`GET /api/maintenance-requests/:id`
-- `200` with `{ "data": request }`
-- `400` for invalid ID
-- `404` when the request does not exist
+### Login
+`POST /api/auth/login`
+- Body: `{ "email": "requester@example.test", "password": "LocalDemoPassword123!" }`
+- Success: `200` with user and JWT.
+- Invalid credentials: `401 INVALID_CREDENTIALS` (generic message, without disclosing which field failed).
 
-## Create
-`POST /api/maintenance-requests`
-- Required JSON fields: `facility_id` (positive integer), `title` (3–160 chars), `reported_by` (2–120 chars)
-- Optional: `asset_id` (positive integer or null), `description` (max 2000 chars), `priority` (`low`, `medium`, `high`, `urgent`), `status` (`open`, `in_progress`, `resolved`, `cancelled`)
-- Success: `201 { "data": request }`
-- Invalid body: `400`
-- Missing facility/invalid asset relationship: `400`
+### Current user
+`GET /api/auth/me`
+- Requires `Authorization: Bearer <token>`.
+- Success: `200` with the authenticated user's public profile.
 
-Example:
-```json
-{
-  "facility_id": 1,
-  "asset_id": 1,
-  "title": "Demo air conditioner inspection",
-  "description": "Fictional data for local testing.",
-  "priority": "medium",
-  "reported_by": "Demo Operations User"
-}
-```
+## Maintenance requests (all routes require a valid Bearer token)
 
-## Update
-`PATCH /api/maintenance-requests/:id`
-- Purpose: update one or more allowed fields.
-- Success: `200 { "data": request }`
-- Empty/invalid body: `400`
-- Missing request: `404`
+- `GET /api/maintenance-requests?limit=20&offset=0` — list the user's own requests; admin users see all requests. `200`.
+- `GET /api/maintenance-requests/:id` — retrieve one request owned by the user or any request for an admin. `200`, `400 INVALID_ID`, `403 FORBIDDEN`, or `404 MAINTENANCE_REQUEST_NOT_FOUND`.
+- `POST /api/maintenance-requests` — create a request. Body fields: `facility_id` (positive integer), optional `asset_id` (positive integer or null), `title` (3–160 chars), optional `description` (max 2,000 chars), optional `priority` (`low`, `medium`, `high`, `urgent`), and optional `status` (`open`, `in_progress`, `resolved`, `cancelled`). `reported_by` and owner ID are set from the authenticated user, not accepted from the client. Success: `201`; invalid body/reference: `400`.
+- `PATCH /api/maintenance-requests/:id` — update allowed request fields only if the user owns the request or is an admin. `200`, `400`, `403`, or `404`.
+- `DELETE /api/maintenance-requests/:id` — delete only if the user owns the request or is an admin. `200`, `403`, or `404`.
+- `GET /api/maintenance-requests/:id/assignments` — retrieve work assignments related to an accessible maintenance request. `200` with an empty list when no assignments are recorded; `403` or `404` when inaccessible or missing.
 
-## Delete
-`DELETE /api/maintenance-requests/:id`
-- Success: `200 { "data": deletedRequest, "message": "Maintenance request deleted" }`
-- Missing request: `404`
+## Consistent errors
 
-## Common response conventions
-- `201`: resource created
-- `200`: successful read/update/delete
-- `400`: invalid request or invalid referenced relationship
-- `404`: resource/route not found
-- `500`: unexpected server error
+All errors use `{ "error": { "code": "...", "message": "..." } }`; validation errors may also include `details`. Status conventions include `400` bad input, `401` missing/invalid authentication, `403` authenticated but not permitted, `404` missing resource/route, `409` duplicate/conflict, `413` oversized body, and `500` unexpected server failure. Stack traces are never returned to clients.
 
-## Week 1 security boundary
-No authentication or authorization is implemented yet. Run locally with fictional data only. Add authentication and access control in Week 2 before considering broader exposure.
+## Database relationships and legacy demo rows
+
+`users` has many `maintenance_requests` through nullable `created_by_user_id`; `maintenance_requests` has many `work_assignments`. Existing seeded Week 1 requests have no owner and are visible/manageable only to an admin. New records receive the authenticated creator's ID. The asset-to-facility composite foreign key remains enforced.
+
+## Security notes
+
+- Set a unique `JWT_SECRET` of at least 32 characters in `.env`; never commit `.env`.
+- Access tokens expire according to `JWT_EXPIRES_IN` (default `1h`).
+- Passwords are hashed with bcrypt (12 rounds).
+- No real bank, employee, customer, or branch data should be used.

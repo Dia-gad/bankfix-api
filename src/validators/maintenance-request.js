@@ -12,8 +12,7 @@ const createSchema = z.object({
   title,
   description,
   priority: priority.optional(),
-  status: status.optional(),
-  reported_by: z.string().trim().min(2).max(120)
+  status: status.optional()
 }).strict();
 
 const updateSchema = z.object({
@@ -22,8 +21,7 @@ const updateSchema = z.object({
   title: title.optional(),
   description,
   priority: priority.optional(),
-  status: status.optional(),
-  reported_by: z.string().trim().min(2).max(120).optional()
+  status: status.optional()
 }).strict();
 
 module.exports = { createSchema, updateSchema };

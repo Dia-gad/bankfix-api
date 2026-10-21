@@ -1,16 +1,39 @@
 @baseUrl = http://localhost:3000
+@token = PASTE_A_TOKEN_FROM_LOGIN_HERE
 
 ### Health
 GET {{baseUrl}}/health
 
-### List maintenance requests
+### Register a fictional requester (one time per unique email)
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "Demo Requester Alice",
+  "email": "alice@example.test",
+  "password": "LocalDemoPassword123!"
+}
+
+### Login - copy the returned token into @token above
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "alice@example.test",
+  "password": "LocalDemoPassword123!"
+}
+
+### Current authenticated user
+GET {{baseUrl}}/api/auth/me
+Authorization: Bearer {{token}}
+
+### List only your requests (admin sees all)
 GET {{baseUrl}}/api/maintenance-requests?limit=20&offset=0
+Authorization: Bearer {{token}}
 
-### Get one request
-GET {{baseUrl}}/api/maintenance-requests/1
-
-### Create request (fictional data only)
+### Create a maintenance request (owner is derived from the token)
 POST {{baseUrl}}/api/maintenance-requests
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -18,12 +41,20 @@ Content-Type: application/json
   "asset_id": 1,
   "title": "Demo water leak in service area",
   "description": "Fictional issue created for local API testing.",
-  "priority": "high",
-  "reported_by": "Demo Operations User"
+  "priority": "high"
 }
 
-### Update request
-PATCH {{baseUrl}}/api/maintenance-requests/1
+### Read one request (replace 4 with the ID returned when creating)
+GET {{baseUrl}}/api/maintenance-requests/4
+Authorization: Bearer {{token}}
+
+### Read related work assignments for a request
+GET {{baseUrl}}/api/maintenance-requests/4/assignments
+Authorization: Bearer {{token}}
+
+### Update your own request
+PATCH {{baseUrl}}/api/maintenance-requests/4
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -31,5 +62,6 @@ Content-Type: application/json
   "priority": "medium"
 }
 
-### Delete request
-DELETE {{baseUrl}}/api/maintenance-requests/1
+### Delete your own disposable test request only
+DELETE {{baseUrl}}/api/maintenance-requests/4
+Authorization: Bearer {{token}}

@@ -4,9 +4,21 @@ const path = require('path');
 const db = require('../src/config/db');
 
 async function main() {
-  const sql = fs.readFileSync(path.join(__dirname, '../db/migrations/001_initial_schema.sql'), 'utf8');
-  await db.query(sql);
-  console.log('Database migration completed.');
+  const directory = path.join(__dirname, '../db/migrations');
+  const migrations = fs.readdirSync(directory)
+    .filter((file) => file.endsWith('.sql'))
+    .sort();
+
+  for (const file of migrations) {
+    const sql = fs.readFileSync(path.join(directory, file), 'utf8');
+    await db.query(sql);
+    console.log(`Migration completed: ${file}`);
+  }
 }
-main().catch((err) => { console.error('Migration failed:', err.message); process.exitCode = 1; })
+
+main()
+  .catch((err) => {
+    console.error('Migration failed:', err.code || 'DATABASE_ERROR');
+    process.exitCode = 1;
+  })
   .finally(() => db.pool.end());

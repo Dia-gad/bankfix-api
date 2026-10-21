@@ -1,7 +1,7 @@
 {
   "name": "bankfix-api",
   "version": "1.0.0",
-  "description": "Week 1 maintenance request API for fictional facilities",
+  "description": "Multi-location maintenance request API for fictional facilities",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
@@ -9,12 +9,12 @@
     "db:migrate": "node scripts/migrate.js",
     "db:seed": "node scripts/seed.js"
   },
-  "engines": {
-    "node": ">=20"
-  },
+  "engines": { "node": ">=20" },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
     "pg": "^8.13.1",
     "zod": "^3.24.2"
   }
